@@ -1,0 +1,37 @@
+[project]
+name = "map-by-python"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "branca==0.8.1",
+    "certifi==2025.6.15",
+    "charset-normalizer==3.4.2",
+    "cramjam==2.10.0",
+    "et-xmlfile==2.0.0",
+    "fastparquet==2024.11.0",
+    "folium==0.20.0",
+    "fsspec==2025.5.1",
+    "idna==3.10",
+    "jinja2==3.1.6",
+    "markupsafe==3.0.2",
+    "numpy==2.3.1",
+    "openpyxl==3.1.5",
+    "packaging==25.0",
+    "pandas==2.3.0",
+    "polars==1.31.0",
+    "pyarrow==20.0.0",
+    "pyqt5==5.15.11",
+    "pyqt5-qt5==5.15.2",
+    "pyqt5-sip==12.17.0",
+    "pyqtwebengine==5.15.7",
+    "pyqtwebengine-qt5==5.15.2",
+    "python-dateutil==2.9.0.post0",
+    "pytz==2025.2",
+    "requests==2.32.4",
+    "six==1.17.0",
+    "tzdata==2025.2",
+    "urllib3==2.5.0",
+    "xyzservices==2025.4.0",
+]

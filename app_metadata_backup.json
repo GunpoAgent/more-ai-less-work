@@ -1,0 +1,8 @@
+{
+  "last_update": "2025-07-02 16:55:04",
+  "source_file": "test_data.xlsx",
+  "full_path": "C:/Users/ssjm0/Desktop/map_by_python/test_data.xlsx",
+  "parquet_file": "geocoded_data.parquet",
+  "total_records": 12,
+  "success_count": 10
+}

@@ -1,0 +1,8 @@
+{
+  "last_update": "2025-07-02 17:05:44",
+  "source_file": "test_with_failed_data.xlsx",
+  "full_path": "test_with_failed_data.xlsx",
+  "parquet_file": "test_with_failed.parquet",
+  "total_records": 6,
+  "success_count": 4
+}
