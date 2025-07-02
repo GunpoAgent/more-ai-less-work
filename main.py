@@ -1,11 +1,3 @@
-"""
-import folium as f
-
-map = f.Map(location=[45.5236, -122.6750], zoom_start=12)
-map.save("map.html")
-"""
-
-
 import sys
 import os
 import pandas as pd
@@ -175,8 +167,17 @@ class MapGeocodingApp(QMainWindow):
         parent.addWidget(map_container)
         
     def create_legend_overlay(self, parent):
-        """지도 위에 범례 오버레이 생성"""
-        # 범례 컨테이너
+        #지도 위에 Type (범례) 오버레이 생성
+        """ 
+        legend_overlay (최상위 컨테이너)
+        └── overlay_layout (VBoxLayout)
+         ├── legend_title ("Marker Type:" 라벨)
+         └── legend_scroll (스크롤 되는 영역)
+                └── legend_widget (스크롤되는 내용 )
+                    └──  select_all_checkbox
+                  
+        """
+        # 전체 범례 컨테이너
         self.legend_overlay = QWidget(parent)
         self.legend_overlay.setStyleSheet("""
             QWidget {
@@ -185,25 +186,25 @@ class MapGeocodingApp(QMainWindow):
                 border-radius: 8px;
                 padding: 5px;
             }
-        """)
+        """) # 범례 컨테이너 스타일 설정 (배경 투명하게 설정, 테두리 설정, 둥근 모서리 설정, 패딩 설정)
         
         # 범례 레이아웃
-        overlay_layout = QVBoxLayout(self.legend_overlay)
-        overlay_layout.setContentsMargins(10, 5, 10, 5)
-        overlay_layout.setSpacing(3)
+        overlay_layout = QVBoxLayout(self.legend_overlay)  #위젯들을 새로로 배치 
+        overlay_layout.setContentsMargins(10, 5, 10, 5) # 위젯들 주변 여백 설정 ( 왼쪽, 위, 오른쪽, 아래 )
+        overlay_layout.setSpacing(3) # 위젯들 사이 간격 설정
         
         # 제목
         legend_title = QLabel("Marker Type:")
-        legend_title.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 5px;")
-        overlay_layout.addWidget(legend_title)
+        legend_title.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 5px;") # 제목 스타일 설정
+        overlay_layout.addWidget(legend_title) # 제목 위젯을 범례 레이아웃에 추가
         
         # 스크롤 영역
-        self.legend_scroll = QScrollArea()
-        self.legend_scroll.setWidgetResizable(True)
-        self.legend_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.legend_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.legend_scroll = QScrollArea() # 스크롤 영역 위젯 생성
+        self.legend_scroll.setWidgetResizable(True) # 내부  위젯 크기 자동으로 조정 (True: 조정 가능, False: 조정 불가능)
+        self.legend_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded) # 필요할때만 세로 스크롤바 표시 
+        self.legend_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # 가로 스크롤바 항상 숨김
         self.legend_scroll.setStyleSheet("""
-            QScrollArea {
+            QScrollArea { 
                 border: none;
                 background-color: transparent;
             }
@@ -215,178 +216,195 @@ class MapGeocodingApp(QMainWindow):
                 background: #888;
                 border-radius: 6px;
             }
-        """)
-        
+        """) # 스크롤 영역 테두리 제거, 배경 투명하게 설정 , 세로 스크롤바 생성 
+         
         self.legend_widget = QWidget()
         self.legend_layout = QVBoxLayout(self.legend_widget)
         self.legend_layout.setContentsMargins(0, 0, 0, 0)
         self.legend_layout.setSpacing(2)
         
+        
         # 모두 선택 체크박스
-        self.select_all_checkbox = QCheckBox("모두 선택")
-        self.select_all_checkbox.setChecked(True)
-        self.select_all_checkbox.clicked.connect(self.toggle_all_types)
-        self.select_all_checkbox.setStyleSheet("font-weight: bold; color: #333;")
-        self.legend_layout.addWidget(self.select_all_checkbox)
+        self.select_all_checkbox = QCheckBox("모두 선택") #QcheckBox : 체크 / 언체크 가능한 상자 생성 위젯
+        self.select_all_checkbox.setChecked(True) # 체크박스 초기 상태 설정 (True: 체크됨, False: 체크되지 않음)
+        self.select_all_checkbox.clicked.connect(self.toggle_all_types) # clicked 이벤트 발생시 - connect - self.toggle_all_types 함수 호출
+        self.select_all_checkbox.setStyleSheet("font-weight: bold; color: #333;") # 체크박스 스타일 설정 )
+        self.legend_layout.addWidget(self.select_all_checkbox) # addWidget : 모두선택 체크박스 위젯을 범례 레이아웃에 추가, QvBoxLayout 이므로 가장 위쪽 (V = vercal )에 배치
         
-        # 구분선
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        line.setStyleSheet("color: #ccc;")
-        self.legend_layout.addWidget(line)
+        # 스크롤 가능 영역에 각 Type( 범례 )위젯 추가
+        self.legend_scroll.setWidget(self.legend_widget) # 스크롤 영역에 범례 위젯 설정
+        overlay_layout.addWidget(self.legend_scroll) # 스크롤 영역 위젯을 범례 레이아웃에 추가
         
-        self.legend_scroll.setWidget(self.legend_widget)
-        overlay_layout.addWidget(self.legend_scroll)
+        # 전체 범례 창 크기 설정
+        self.legend_overlay.resize(200, 400)  #가로, 세로
+        self.legend_overlay.hide()  # 초기에는 숨김 (엑셀 데이터 분석 후 표시를 의도함)
         
-        # 초기 크기 및 위치 설정 (가로 2/3, 세로 2배)
-        self.legend_overlay.resize(167, 400)  # 기본 250px의 2/3 ≈ 167px, 200px의 2배 = 400px
-        self.legend_overlay.hide()  # 초기에는 숨김
+        # 창 크기 변경 시 범례 창 위치 조정
+    def resizeEvent(self, event): #event : 이벤트 객체 ( 여기서는 창 크기 변경 이벤트 ) 보통 old_size , new_size 두개의 크기 정보를 포함함
+        super().resizeEvent(event) # 부모 클래스의 resizeEvent 메서드 호출 ( 기본 동작 유지 )
+        self.position_legend_overlay() # 범례 창 위치 조정 함수 호출 , 이후 범례 창 크기도 update
         
-    def resizeEvent(self, event):
-        """창 크기 변경 시 범례 위치 조정"""
-        super().resizeEvent(event)
-        self.position_legend_overlay()
-        
+        #기본 지도 로드 함수 (경기도 군포시 청백리길6 , 군포 시청을 기준점으로)
     def load_default_map(self):
-        """기본 지도 로드"""
-        # 경기도 군포시 청백리길6 좌표 (README.md에서 언급된 기본 위치)
         tiles = "http://mt0.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}"
-        attr = "Google"
-        map_folium = folium.Map(
-            location=[37.36163002691529, 126.93520593427584], 
-            zoom_start=11,
-            tiles=tiles,
-            attr=attr
+        attr = "Google" # 기본 지도가 아닌 google map 사용
+        map_folium = folium.Map( # folium 라이브러리를 사용하여 지도 생성
+            location=[37.36163002691529, 126.93520593427584], # 군포 시청 좌표
+            zoom_start=11, # 초기 zoom 수준 ( 숫자 클수록 확대 )
+            tiles=tiles, # 지도 타일 유형 ( Google Map )
+            attr=attr # 지도 속성 ( Google Map )
         )
-        
-        # 기본 위치에 마커 추가
-        folium.Marker(
-            [37.36163002691529, 126.93520593427584],
-            popup="기본 위치: 경기도 군포시 청백리길6",
-            tooltip="기본 위치",
-            icon=folium.Icon(color='red', icon='home')
-        ).add_to(map_folium)
-        
+        # 위에 만들어진 지도를 html 파일로 저장
         html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "map.html")
         map_folium.save(html_file)
-        self.web_view.load(QUrl.fromLocalFile(html_file))
+        self.web_view.load(QUrl.fromLocalFile(html_file)) # 위에 만들어진 html 파일을 Gui 상의 webview에 로드 ( 지도 표시 )
         
-        # 범례 숨기기
+        # 범례 숨기기 ( 초기에는 숨김 ) Q. 위에 숨기지 않았나요 ? A. 이전에 저장된 데이터가 있으면 범례 표시 되었음
         if hasattr(self, 'legend_overlay'):
             self.legend_overlay.hide()
             
+    # 엑셀 파일 선택 함수
     def select_file(self):
-        """엑셀 파일 선택"""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, 
-            "엑셀 파일 선택", 
-            "", 
-            "Excel files (*.xlsx *.xls)"
-        )
-        
-        if file_path:
-            self.current_file_path = file_path
-            self.file_label.setText(f"selected file: {os.path.basename(file_path)}")
-            self.status_label.setText("파일이 선택되었습니다. 지오코딩을 시작합니다...")
-            # 자동으로 지오코딩 실행
-            self.start_geocoding()
+        file_path, _ = QFileDialog.getOpenFileName( self, "엑셀 파일 선택", "", "Excel files (*.xlsx *.xls)") 
+        #QFileDialog : 파일 선택 대화상자 생성 위젯, getOpenFileName : 파일 선택 대화상자 표시 함수
+        # 파일 선택 대화상자 표시, 파일 선택 후 파일 경로 반환
+        # arg 1 : self (파일 선택창의 부모 창, 현재 창을 기준으로 대화상자 표시)
+        # arg 2 : 대화상자 제목 (엑셀 파일 선택)
+        # arg 3 : "", 초기 디렉토리 (빈 문자열이면 현재 디렉토리 또는 최근 사용 디렉토리)
+        # arg 4 : 파일 확장자 필터 (Excel 파일 확장자 필터)
 
+        if file_path: #파일이 실제로 선택 되었는지 확인 , 빈 문자열은 False로 반환되므로 , 선택을 안한 경우엔 실행되지 않음
+            try:
+                # 파일 존재 여부 확인
+                if not os.path.exists(file_path):
+                    self.status_label.setText("파일을 찾을 수 없습니다.")
+                    return
+                # 파일 형식 검증
+                if not file_path.lower().endswith(('.xlsx', '.xls')):
+                    self.status_label.setText("올바른 엑셀 파일이 아닙니다.")
+                    return
+                
+                # 올바른 파일이 선택되었을시 
+                self.current_file_path = file_path # 선택된 파일 경로 저장
+                self.file_label.setText(f"selected file: {os.path.basename(file_path)}") # 선택된 파일 경로 표시
+                self.status_label.setText("파일이 선택되었습니다.")
+                # 자동으로 지오코딩 실행
+                self.start_geocoding()
+            except Exception as e:
+                QMessageBox.critical(self, "오류", f"파일 선택 중 오류가 발생했습니다:\n{e}")
+                return # 오류 발생 시 함수 종료 ( 오류 발생 시 파일 선택 창 닫힘 )
+            
+    # 기본 엑셀 양식 다운로드 함수      
     def download_template(self):
-        """기본 엑셀 양식 다운로드"""
         template_file = "integrated.xlsx"
         
         if not os.path.exists(template_file):
-            QMessageBox.warning(self, "파일 없음", "기본 양식 파일(integrated.xlsx)이 존재하지 않습니다.")
+            QMessageBox.warning(self, f"파일 없음", "기본 양식 파일이 존재하지 않습니다.")
             return
             
         # 저장할 위치 선택
-        save_path, _ = QFileDialog.getSaveFileName(
+        save_path, _ = QFileDialog.getSaveFileName( #save_path, _: 저장 경로만 사용하고 필터 정보는 무시
             self, 
             "기본 엑셀 양식 저장", 
-            "기본_지오코딩_양식.xlsx",
+            "basic_form.xlsx",
             "Excel files (*.xlsx)"
         )
         
-        if save_path:
+       
+        if save_path:  # if save_path: 사용자가 실제로 저장 경로를 선택했는지 확인
             try:
-                import shutil
-                shutil.copy2(template_file, save_path)
+                import shutil # shutil : 파일 복사 모듈
+                shutil.copy2(template_file, save_path) # 기본 양식 파일을 선택된 경로에 복사 
+                #shutil.copy(): 기본 복사, shutil.copyfile(): 파일 내용만 복사 , shutil.copy2(): 파일 내용 + 메타데이터 복사 
                 QMessageBox.information(self, "다운로드 완료", f"기본 양식이 다음 위치에 저장되었습니다:\n{save_path}")
             except Exception as e:
                 QMessageBox.critical(self, "다운로드 실패", f"파일 저장 중 오류가 발생했습니다:\n{e}")
  
-            
+
+    # 주소 -> 좌표 (위도,경도) 변환         
     def start_geocoding(self):
-        """지오코딩 시작"""
-        if not hasattr(self, 'current_file_path'):
+        if not hasattr(self, 'current_file_path'): 
+            # hasattr(self, 'current_file_path'): 객체에 특정 속성이 존재확인, self.current_file_path가 설정되지 않은 상태에서 접근하면 AttributeError 발생 방지
             QMessageBox.warning(self, "파일 선택", "먼저 파일을 선택해주세요.")
-            return
+            return # 파일이 선택되어 있지 않으면 함수 종료
             
-        # UI 업데이트
+        # UI 업데이트 ( 파일 선택 버튼 비활성화, 진행 바 표시, 상태 메시지 업데이트, 결과 텍스트 초기화 )
         self.file_button.setEnabled(False)
         self.progress_bar.setVisible(True)
         self.progress_bar.setRange(0, 0)  # 무한 진행바
-        self.status_label.setText("지오코딩 진행 중...")
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+            border: none;
+            border-radius: 15px;
+            background-color: rgba(0, 0, 0, 50);
+            color: white;
+            font-weight: bold;
+            }
+    
+            QProgressBar::chunk {
+            border-radius: 15px;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #00ffff, stop:0.5 #ff00ff, stop:1 #ffff00);
+            }
+        """)
+
+        self.status_label.setText("Processing...")
         self.result_text.clear()
         
         # 백그라운드 스레드에서 지오코딩 실행
         self.geocoding_thread = GeocodingThread(self.current_file_path)
-        self.geocoding_thread.progress_update.connect(self.update_progress)
-        self.geocoding_thread.finished_signal.connect(self.geocoding_finished)
-        self.geocoding_thread.error_signal.connect(self.geocoding_error)
-        self.geocoding_thread.start()
+        self.geocoding_thread.progress_update.connect(self.update_progress) # 진행 상황 업데이트 시 호출되는 함수 연결
+        self.geocoding_thread.finished_signal.connect(self.geocoding_finished) # 지오코딩 완료 시 호출되는 함수 연결
+        self.geocoding_thread.error_signal.connect(self.geocoding_error) # 지오코딩 오류 발생 시 호출되는 함수 연결
+        self.geocoding_thread.start() # 지오코딩 작업 스레드 시작
+
+        # 진행 상황 업데이트
+    def update_progress(self, message): 
+        self.status_label.setText(message) # 진행 상황 메시지 업데이트
         
-    def update_progress(self, message):
-        """진행 상황 업데이트"""
-        self.status_label.setText(message)
-        
+        # GeoCoding 완료 처리 함수
     def geocoding_finished(self, df, failed_items):
-        """지오코딩 완료 처리"""
-        self.current_df = df
+        self.current_df = df # df : dataFrame
         
-        # failed_items의 datetime 객체를 문자열로 변환 (JSON 직렬화 오류 방지)
+        # 변환에 실패한 항목들을 저장
         processed_failed_items = []
         for item in failed_items:
             processed_item = item.copy()
-            if 'date' in processed_item and hasattr(processed_item['date'], 'strftime'):
+            if 'date' in processed_item and hasattr(processed_item['date'], 'strftime'): #datetime 객체를 JSON에 저장시키기 위해 문자열로 변환
                 processed_item['date'] = processed_item['date'].strftime('%Y-%m-%d %H:%M:%S')
             processed_failed_items.append(processed_item)
         
         self.failed_items = processed_failed_items
         
         # 마지막 갱신 정보 업데이트
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = datetime.now().strftime("%Y-%m-%d  %H:%M:%S")
         self.update_date_label.setText(f"마지막 갱신 날짜: {current_time}")
-        self.update_file_label.setText(f"저장된 파일: {os.path.basename(self.current_file_path)}")
+        self.update_file_label.setText(f"현재 지도 데이터 : {os.path.basename(self.current_file_path)}")
         
         # UI 업데이트
-        self.progress_bar.setVisible(False)
-        self.file_button.setEnabled(True)
+        self.progress_bar.setVisible(False) # 진행 바 숨기기
+        self.file_button.setEnabled(True) # 파일 선택 버튼 활성화
         
         # Check Failed List 버튼 활성화 (실패한 항목이 있는 경우)
         self.check_failed_button.setEnabled(len(failed_items) > 0)
         
-        # 자동으로 지도에 마커 표시
-        self.status_label.setText("지도에 마커를 표시하는 중...")
-        self.create_map_with_markers()
+        # 지도에 마커 표시
+        self.status_label.setText("Updating Map...")
+        self.create_map_with_markers() # 지도에 마커 표시하는 함수 호출
         
         # 결과 표시
-        total_count = len(df)
-        success_count = len(df[df['geocoding'].notna() & (df['geocoding'] != '')])
-        failed_count = len(failed_items)
+        total_count = len(df) # 총 데이터 개수
+        success_count = len(df[df['geocoding'].notna() & (df['geocoding'] != '')]) # 성공한 데이터 개수 df['geocoding'].notna() & (df['geocoding'] != ''): 지오코딩 성공 조건, notna(): null이 아닌 값, !=' ' : 빈 문자열 아닌값
+        failed_count = len(failed_items) # 실패한 데이터 개수
         
-        result_text = f"Geocoding Result:\n"
-        result_text += f"=== 지오코딩 완료 ===\n"
+        result_text = f"Result:\n"
         result_text += f"총 데이터: {total_count}개\n"
         result_text += f"성공: {success_count}개\n"
         result_text += f"실패: {failed_count}개\n\n"
-        result_text += f"데이터가 geocoded_data.parquet 파일로 저장되었습니다."
-        
+        result_text += "※ 주소변환 실패 원인 : 오탈자, 누락, 다중 검색 주소 \n"
+        result_text += "※ CHECK FAILED LIST - 주소 변환에 실패한 항목 확인 \n"
         self.result_text.setPlainText(result_text)
-        
-        self.status_label.setText(f"완료! 지도에 {success_count}개의 마커가 표시되었습니다.")
-        
+
         # 메타데이터 저장
         self.save_session_metadata()
         
@@ -530,6 +548,7 @@ class MapGeocodingApp(QMainWindow):
         self.create_filtered_map(selected_types)
         
     def create_filtered_map(self, selected_types):
+
         """선택된 타입들만 표시하는 지도 생성"""
         # 기본 지도 생성 (경기도 군포시청 중심)
         tiles = "http://mt0.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}"
@@ -572,7 +591,7 @@ class MapGeocodingApp(QMainWindow):
                     folium.Marker(
                         [lat, lng],
                         popup=folium.Popup(popup_content, max_width=300),
-                        tooltip=f"{place_type}: {address}",
+                        tooltip=f"{place_type} {address}",
                         icon=folium.Icon(color=color, icon='info-sign')
                     ).add_to(map_folium)
                     
@@ -580,15 +599,7 @@ class MapGeocodingApp(QMainWindow):
                     
                 except Exception as e:
                     print(f"마커 생성 실패 - 행 {idx}: {e}")
-        
-        # 기본 위치 마커 (빨간색)
-        folium.Marker(
-            [37.36163002691529, 126.93520593427584],
-            popup="기본 위치: 경기도 군포시 청백리길6",
-            tooltip="기본 위치",
-            icon=folium.Icon(color='red', icon='home')
-        ).add_to(map_folium)
-        
+
         # 지도 저장 및 표시
         html_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "map.html")
         map_folium.save(html_file)
